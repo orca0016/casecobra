@@ -51,7 +51,7 @@ const DesignConfigurator = ({
   });
   const { toast } = useToast();
   const router = useRouter();
-  const { mutate: saveConfig } = useMutation({
+  const { mutate: saveConfig , isPending } = useMutation({
     mutationKey: ["save-config"],
     mutationFn: async (args: saveConfigArgs) => {
       await Promise.all([saveConfiguration(), _saveConfig(args)]);
@@ -394,6 +394,9 @@ const DesignConfigurator = ({
                 )}
               </p>
               <Button
+              isLoading={isPending}
+              disabled={isPending}
+              loadingText="Saving"
                 onClick={() =>
                   saveConfig({
                     configId,
