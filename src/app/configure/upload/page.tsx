@@ -3,11 +3,11 @@
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import upload from "@/utils/upload-js";
 import { Image, Loader2, MousePointerSquareDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
-import upload from "@/utils/upload-js";
 
 const UploadPage: React.FC = () => {
   const { toast } = useToast();
@@ -18,43 +18,47 @@ const UploadPage: React.FC = () => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
 
-    upload.uploadFile(file, {
-      onBegin: () => setProgress(0),
-      onProgress: ({ progress }) => setProgress(progress),
-    })
-    .then(async (data) => {
-      setFileUrl(data.fileUrl);
+      upload
+        .uploadFile(file, {
+          onBegin: () => setProgress(0),
+          onProgress: ({ progress }) => setProgress(progress),
+        })
+        .then(async (data) => {
+          setFileUrl(data.fileUrl);
 
-      const response = await fetch("/api/upload-handler", { // بررسی مسیر این خط
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ fileUrl: data.fileUrl  , }),
-      });
+          const response = await fetch("/api/upload-handler", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fileUrl: data.fileUrl }),
+          });
 
-      const result = await response.json();
-      
-      if (response.ok) {
-        startTransition(() => {
-          router.push(`/configure/design?id=${result.configId}`);
+          const result = await response.json();
+
+          if (response.ok) {
+            startTransition(() => {
+              router.push(`/configure/design?id=${result.configId}`);
+            });
+          } else {
+            throw new Error(result.message);
+          }
+        })
+        .catch((error) => {
+          setError(error.message);
+          toast({
+            title: "Upload Error",
+            description: error.message,
+            variant: "destructive",
+          });
         });
-      } else {
-        throw new Error(result.message);
-      }
-    })
-    .catch((error) => {
-      setError(error.message);
-      toast({
-        title: "Upload Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    });
-  }, [router, toast]);
+    },
+    [router, toast]
+  );
 
   const onDropRejected = (rejectedFiles: FileRejection[]) => {
     const [file] = rejectedFiles;

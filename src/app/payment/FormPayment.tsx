@@ -17,25 +17,25 @@ import { validationPayment } from "@/validators/validationPayment";
 import { useMutation } from "@tanstack/react-query";
 import { useFormik } from "formik";
 import { Coins, CreditCard, ScanLine } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { paymentProduct } from "./actions";
-import { useRouter } from "next/navigation";
 
 const FormPayment = ({ orderId }: { orderId: string }) => {
   const [isAddress, setIsAddress] = useState<boolean>(false);
-const router = useRouter()
-  const { mutate: payProduct } = useMutation({
+  const router = useRouter();
+  const { mutate: payProduct, isPending } = useMutation({
     mutationKey: ["payment-form"],
-    mutationFn:  paymentProduct,
+    mutationFn: paymentProduct,
     onSuccess: ({ url }) => {
-      console.log("is ok", url);
-      if (url) router.push(url)
-      else throw new Error('Unable to retrieve thank you URL.')
+      if (url) router.push(url);
+      else throw new Error("Unable to retrieve thank you URL.");
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error(error);
       toast({
         title: "Something went wrong",
-        description: "There was an error on our end. Please try again.",
+        description: `There was an error on our end. Please try again. ${error.message}`,
         variant: "destructive",
       });
     },
@@ -55,7 +55,6 @@ const router = useRouter()
       CvcCart: "",
     },
     onSubmit: (values) => {
-      console.log("formik values", values);
       payProduct({ orderId, paymentData: values });
     },
     validationSchema: validationPayment,
@@ -64,6 +63,11 @@ const router = useRouter()
   useEffect(() => {
     setIsAddress(formik.values.address !== "");
   }, [formik.values.address]);
+
+  const [redirecting, isRedirecting] = useState<boolean>(false);
+  useEffect(() => {
+    isRedirecting(true);
+  }, [isPending]);
 
   return (
     <div className="relative mt-12">
@@ -249,7 +253,15 @@ const router = useRouter()
             </div>
           </div>
           <div className="w-full mt-6">
-            <Button type="submit" className="w-full ">
+            <Button
+              type="submit"
+              className="w-full "
+              isLoading={isPending}
+              disabled={isPending}
+              loadingText={
+                isPending ? "Processing" : redirecting ? "Done" : "Processing"
+              }
+            >
               Pay
             </Button>
           </div>

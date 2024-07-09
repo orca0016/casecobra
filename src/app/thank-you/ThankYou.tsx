@@ -1,11 +1,11 @@
 "use client";
 
 import PhonePreview from "@/components/PhonePreview";
+import { formatPrice } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { getPaymentStatus } from "./action";
-import { formatPrice } from "@/lib/utils";
 
 const ThankYou = () => {
   const searchParams = useSearchParams();

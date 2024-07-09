@@ -2,7 +2,9 @@ import * as Yup from "yup";
 const countryList = ["iran", "usa", "canada", "germany", "france"];
 
 export const validationPayment = Yup.object().shape({
-  email: Yup.string().email("Please enter a valid email address").required("Email is required"),
+  email: Yup.string()
+    .email("Please enter a valid email address")
+    .required("Email is required"),
   fullName: Yup.string().required("Please enter your full name"),
   country: Yup.string()
     .oneOf(countryList, "Please select a valid country")

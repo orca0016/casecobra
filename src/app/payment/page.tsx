@@ -18,7 +18,7 @@ const Page = async ({ searchParams }: PageProps) => {
   }
 
   const order = await db.order.findFirst({
-    where: { id:orderId },
+    where: { id: orderId },
   });
 
   if (!order) {

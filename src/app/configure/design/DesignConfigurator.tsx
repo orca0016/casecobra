@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast, useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { BASE_PRICE } from "@/config/products";
 import { cn, formatPrice } from "@/lib/utils";
 import upload from "@/utils/upload-js";
@@ -25,7 +25,7 @@ import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Rnd } from "react-rnd";
 import { saveConfig as _saveConfig, saveConfigArgs } from "./actions";
 interface DesignConfiguratorProps {
@@ -49,9 +49,10 @@ const DesignConfigurator = ({
     material: MATERIALS.options[0],
     finish: FINISHES.options[0],
   });
+
   const { toast } = useToast();
   const router = useRouter();
-  const { mutate: saveConfig , isPending } = useMutation({
+  const { mutate: saveConfig, isPending } = useMutation({
     mutationKey: ["save-config"],
     mutationFn: async (args: saveConfigArgs) => {
       await Promise.all([saveConfiguration(), _saveConfig(args)]);
@@ -67,6 +68,12 @@ const DesignConfigurator = ({
       router.push(`/configure/preview?id=${configId}`);
     },
   });
+
+  const [redirecting, isRedirecting] = useState<boolean>(false);
+  useEffect(() => {
+    isRedirecting(true);
+  }, [isPending]);
+
   const [renderedDimension, setRenderedDimension] = useState({
     width: imageDimensions.width / 4,
     height: imageDimensions.height / 4,
@@ -120,21 +127,13 @@ const DesignConfigurator = ({
       const file = new File([blob], "filename.png", { type: "image/png" });
 
       const data = await upload.uploadFile(file);
-      const response = await fetch("/api/upload-handler", {
+      await fetch("/api/upload-handler", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ fileUrl: data.fileUrl, cnfId: configId }),
       });
-
-      if (response.ok) {
-        toast({
-          title: "Upload Successful",
-          description: "Your configuration has been saved successfully.",
-          variant: "default",
-        });
-      }
     } catch (error) {
       console.error("Error during upload:", error);
       toast({
@@ -394,9 +393,15 @@ const DesignConfigurator = ({
                 )}
               </p>
               <Button
-              isLoading={isPending}
-              disabled={isPending}
-              loadingText="Saving"
+                isLoading={isPending}
+                disabled={isPending}
+                loadingText={
+                  isPending
+                    ? "Saving"
+                    : redirecting
+                    ? "Redirecting..."
+                    : "Saving"
+                }
                 onClick={() =>
                   saveConfig({
                     configId,

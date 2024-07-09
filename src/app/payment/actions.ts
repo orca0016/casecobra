@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import OrderReceivedEmail from "@/components/emails/OrderReceivedEmail";
 import { db } from "@/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -21,7 +21,7 @@ interface PaymentData {
   paymentData: typeObject;
 }
 
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -30,7 +30,7 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
   const user = await getUser();
 
   if (!user) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
 
   try {
@@ -39,7 +39,7 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
     });
 
     if (!dbUser) {
-      throw new Error('User not found in database');
+      throw new Error("User not found in database");
     }
 
     const shippedAddress = await db.shippingAddress.create({
@@ -51,7 +51,7 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
         country: paymentData.country,
         state: null,
         phoneNumber: paymentData.phoneNumber.toString(),
-      }
+      },
     });
 
     const billingAddress = await db.billingAddress.create({
@@ -63,7 +63,7 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
         country: paymentData.country,
         state: null,
         phoneNumber: paymentData.phoneNumber.toString(),
-      }
+      },
     });
 
     await db.order.update({
@@ -71,13 +71,13 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
       data: {
         shippingAddressId: shippedAddress.id,
         billingAddressId: billingAddress.id,
-        isPaid: true
-      }
+        isPaid: true,
+      },
     });
 
     await resend.emails.send({
       from: "CaseCobra <mashhadim901@gmail.com>",
-      to: [user.email ?? ''],
+      to: [user.email ?? ""],
       subject: "Thank you for your order!",
       react: OrderReceivedEmail({
         orderId,
@@ -91,12 +91,14 @@ export const paymentProduct = async ({ orderId, paymentData }: PaymentData) => {
           country: paymentData.country,
           state: null,
           phoneNumber: paymentData.phoneNumber.toString(),
-        }
-      })
+        },
+      }),
     });
 
-    return { url: `${process.env.NEXT_PUBLIC_SERVER_URL}/thank-you?orderId=${orderId}` };
+    return {
+      url: `${process.env.NEXT_PUBLIC_SERVER_URL}/thank-you?orderId=${orderId}`,
+    };
   } catch (e) {
-    throw new Error('Error in your code: ');
+    throw new Error("Error in your code: ");
   }
 };

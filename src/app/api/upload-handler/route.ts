@@ -1,4 +1,3 @@
-// app/api/upload-handler/route.ts
 import Log from "@/components/Log";
 import { db } from "@/db";
 import { NextRequest, NextResponse } from "next/server";
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ configId: configuration.id }, { status: 200 });
   } catch (error) {
-    console.error("Upload or database operation failed", error);
+    console.error("Upload or database operation failed 'upload-handler'", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
